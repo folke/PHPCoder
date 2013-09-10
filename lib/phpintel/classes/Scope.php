@@ -18,6 +18,8 @@ class PHPIntel_Scope {
         }
         if (empty($left) || empty($right))
             return;
+        if (PHPIntel_Parser::isFunctionLocal($left[0]) && $left[0] == $right[0])
+            return;
         if (PHPIntel_Parser::isFunctionLocal($left[0])) {
             $local = substr($left[0], 1);
             $this->variables[$local] = $local;
