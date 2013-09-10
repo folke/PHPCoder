@@ -152,22 +152,25 @@ class PhpCoderComplete(sublime_plugin.EventListener):
 class PhpCoderLookup(sublime_plugin.TextCommand):
 
     def run_(self, args1, args2):
-        if 'event' in args2:
-            self.fromMouseEvent = args2['event']
+        print(repr([args1, args2]))
+        if args2 and 'event' in args2:
+            self.view.run_command("drag_select", {'event': args2['event']})
+            sublime.set_timeout(self.asyncLookup, 100)
+            return
         else:
-            self.fromMouseEvent = None
-        sublime_plugin.TextCommand.run_(self, args1, args2)
+            sublime_plugin.TextCommand.run_(self, args1, args2)
+
+    def asyncLookup(self):
+        self.view.run_command("php_coder_lookup")
 
     def run(self, edit):
         if sublime.score_selector(self.view.scope_name(self.view.sel()[0].b), 'source.php') == 0:
             return
-        if self.fromMouseEvent:
-            old_sel = [r for r in self.view.sel()]
-            self.view.run_command("drag_select", {'event': self.fromMouseEvent})
-            new_sel = self.view.sel()[0]
+
         editor = PhpCoder().editor(self.view)
-        offset = 0
         pos = editor.getPosition()
+        offset = 0
+        
         while re.match(r'[a-zA-Z_][a-zA-Z0-9_]*', editor.substr(pos + offset, pos + offset + 1)):
             offset += 1
         expr = editor.expr()
