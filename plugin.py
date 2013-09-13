@@ -45,7 +45,9 @@ class PhpCoderComplete(sublime_plugin.EventListener):
         if re.match(r'.*[,\(]\s*$', line):
             return self._completeParams(editor, resolver)
         if re.match(r'.*new [a-zA-Z0-9_]*$', line):
-            return self._completeNew(view)
+            return self._completeNew(view, 'complete')
+        if re.match(r'(^|\s+)[a-zA-Z]+$', line):
+            return self._completeNew(view, 'static')
         if line[-1] == '$':
             return editor.findLocals()
         expr = editor.expr()
@@ -61,7 +63,7 @@ class PhpCoderComplete(sublime_plugin.EventListener):
         line = editor.before()
         if len(line) == 0:
             return
-        if re.match(r'.*[,\(]\s*$', line) or line[-1] == '$' or re.match(r'.*new [a-zA-Z0-9_]*$', line):
+        if re.match(r'.*[,\(]\s*$', line) or line[-1] == '$' or re.match(r'.*new [a-zA-Z0-9_]*$', line) or re.match(r'(^|\s+)[a-zA-Z]+$', line):
             doComplete = True
         else:
             expr = editor.expr()
@@ -70,13 +72,13 @@ class PhpCoderComplete(sublime_plugin.EventListener):
         if doComplete:
             view.run_command('auto_complete', {
                 'disable_auto_insert': True,
-                'api_completions_only': True,
+                'api_completions_only': False,
                 'next_completion_if_showing': False,
                 'auto_complete_commit_on_tab': True,
             })
 
-    def _completeNew(self, view):
-        return PhpCoder().indexer.getClasses(view.window().folders(), mode = 'complete')
+    def _completeNew(self, view, mode):
+        return PhpCoder().indexer.getClasses(view.window().folders(), mode)
         
     def _completeExpr(self, expr, editor, resolver):
         prev = expr['prefix'][:2]
@@ -152,7 +154,6 @@ class PhpCoderComplete(sublime_plugin.EventListener):
 class PhpCoderLookup(sublime_plugin.TextCommand):
 
     def run_(self, args1, args2):
-        print(repr([args1, args2]))
         if args2 and 'event' in args2:
             self.view.run_command("drag_select", {'event': args2['event']})
             sublime.set_timeout(self.asyncLookup, 100)

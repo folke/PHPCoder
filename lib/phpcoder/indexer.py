@@ -29,7 +29,9 @@ class Indexer:
                 if path.startswith(folder):
                     for klass in data['classes']:
                         if mode == 'lookup':
-                            ret.append([klass, path])
+                            ret.append([klass, os.path.basename(folder) + path[len(folder):], path])
+                        elif mode == 'static':
+                            ret.append([klass, klass + '::${1}'])
                         else:
                             ret.append([klass, klass + '(${1})'])
         return ret
